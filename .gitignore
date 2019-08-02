@@ -1,0 +1,8 @@
+.DS_Store
+/dingding/dingding
+*.o
+*.a
+*.so
+*~
+*#
+.credential

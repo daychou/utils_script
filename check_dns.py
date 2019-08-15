@@ -2,13 +2,11 @@
 #encoding:utf8
 
 # pip install dnspython IPy
-# 检查业务域名解析的IP是否在指定的IP段里，如果不在就发送钉钉告警通知
 
 import json
 import requests
 from IPy import IP
 import dns.resolver
-
 
 def send_to_rebot(context):
     '''
@@ -58,11 +56,16 @@ def GetArecordIp(domain_name):
 if __name__ == '__main__':
     domin_list = ['buy.itunes.apple.com', 'sandbox.itunes.apple.com']
     ips_list = ['17.154.66.0/24', '17.154.67.0/24']
+    # 设置重试次数
+    num = 3
     # 解析出IP列表
     for domain in domin_list:
-        code, result = GetArecordIp(domain)
-        if not code:
-            mes = u'### 苹果支付域名解析异常通知: \n\n 域名: {0} \n\n 描述: 域名解析失败 \n\n 监控节点: Hostname \n\n'.format(result.get('domain'))
+        for i in range(num):
+            code, result = GetArecordIp(domain)
+            if code:
+                break
+        else:
+            mes = u'### 苹果支付域名解析异常通知: \n\n 域名: {0} \n\n 描述: 域名解析失败(重试{1}次) \n\n 监控节点: Hostname \n\n'.format(result.get('domain'), num)
             send_to_rebot(mes)
         # 验证解析IP是否在阿里路由列表
         for resolv_ip in result.get('address'):

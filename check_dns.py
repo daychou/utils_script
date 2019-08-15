@@ -5,6 +5,7 @@
 
 import json
 import requests
+import time
 from IPy import IP
 import dns.resolver
 
@@ -60,10 +61,11 @@ if __name__ == '__main__':
     num = 3
     # 解析出IP列表
     for domain in domin_list:
-        for i in range(num):
+        for i in range(1, num+1):
             code, result = GetArecordIp(domain)
             if code:
                 break
+            time.sleep(i)
         else:
             mes = u'### 苹果支付域名解析异常通知: \n\n 域名: {0} \n\n 描述: 域名解析失败(重试{1}次) \n\n 监控节点: Hostname \n\n'.format(result.get('domain'), num)
             send_to_rebot(mes)

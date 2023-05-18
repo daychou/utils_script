@@ -1,42 +1,31 @@
 package main
 
-import (
-	"github.com/levigross/grequests"
-	"github.com/pkg/errors"
-)
-
-const (
-	token = "xxx"
-	url   = "https://aa.com/cmdb/v2/api/assets/cloud_host/"
-)
-
-type HostInfo struct {
-	Results []struct {
-		Name string `json:"name"`
-		IP   string `json:"ip"`
-	} `json:"results"`
+type hostInfo struct {
+	Name   string `json:"name"`
+	IP     string `json:"ip"`
+	Status string `json:"status"`
 }
 
-func GetCloudHost() (*HostInfo, error) {
-	var hostInfo *HostInfo
+func GetCloudHost() ([]*hostInfo, error) {
+	var hostInfos []*hostInfo
 
-	ro := &grequests.RequestOptions{
-		Params: map[string]string{
-			"simple":    "1",
-			"page_size": "9999",
-			"type":      "9",
-		},
-		Headers:   map[string]string{"Authorization": "Token " + token},
-		UserAgent: "Alfred of daychou",
-	}
-	resp, err := grequests.Get(url, ro)
+	instances, err := getAliyunECS()
 	if err != nil {
-		return hostInfo, errors.Wrap(err, "request get error: ")
+		return hostInfos, err
 	}
 
-	if err := resp.JSON(&hostInfo); err != nil {
-		return hostInfo, errors.Wrap(err, "json Unmarshal error: ")
+	for i := range instances {
+		var ip string
+		if *instances[i].InstanceNetworkType == "classic" {
+			ip = *instances[i].InnerIpAddress.IpAddress[0]
+		} else {
+			ip = *instances[i].VpcAttributes.PrivateIpAddress.IpAddress[0]
+		}
+		hostInfos = append(hostInfos, &hostInfo{
+			Name:   *instances[i].InstanceName,
+			IP:     ip,
+			Status: *instances[i].Status,
+		})
 	}
-
-	return hostInfo, nil
+	return hostInfos, nil
 }

@@ -52,11 +52,11 @@ func run() {
 	if doDownload {
 		wf.Configure(aw.TextErrors(true))
 		log.Printf("[main] downloading ecs list...")
-		hostInfo, err := GetCloudHost()
+		hostInfos, err := GetCloudHost()
 		if err != nil {
 			wf.FatalError(err)
 		}
-		if err := wf.Cache.StoreJSON(cacheName, hostInfo); err != nil {
+		if err := wf.Cache.StoreJSON(cacheName, hostInfos); err != nil {
 			wf.FatalError(err)
 		}
 		log.Printf("[main] downloaded ecs list")
@@ -66,7 +66,7 @@ func run() {
 	log.Printf("[main] query=%s", query)
 
 	// Try to load repos
-	ecsList := HostInfo{}
+	var ecsList []*hostInfo
 	if wf.Cache.Exists(cacheName) {
 		if err := wf.Cache.LoadJSON(cacheName, &ecsList); err != nil {
 			wf.FatalError(err)
@@ -88,7 +88,7 @@ func run() {
 		}
 		// Cache is also "expired" if it doesn't exist. So if there are no
 		// cached data, show a corresponding message and exit.
-		if len(ecsList.Results) == 0 {
+		if len(ecsList) == 0 {
 			wf.NewItem("Downloading ecs info…").
 				Icon(aw.IconInfo)
 			wf.SendFeedback()
@@ -97,8 +97,8 @@ func run() {
 	}
 
 	// Add results for cached ecs
-	for _, r := range ecsList.Results {
-		sub := fmt.Sprintf("★ %s", r.IP)
+	for _, r := range ecsList {
+		sub := fmt.Sprintf("★ %s(%s)", r.IP, r.Status)
 		wf.NewItem(r.Name).
 			Subtitle(sub).
 			Arg(r.IP).
@@ -110,7 +110,7 @@ func run() {
 	// Filter results against query if user entered one
 	if query != "" {
 		res := wf.Filter(query)
-		log.Printf("[main] %d/%d ecs match %q", len(res), len(ecsList.Results), query)
+		log.Printf("[main] %d/%d ecs match %q", len(res), len(ecsList), query)
 	}
 
 	// Convenience method that shows a warning if there are no results to show.

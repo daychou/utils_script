@@ -100,6 +100,7 @@ func run() {
 	for _, r := range ecsList {
 		sub := fmt.Sprintf("★ %s(%s)", r.IP, r.Status)
 		wf.NewItem(r.Name).
+			Match(r.Name+r.IP).
 			Subtitle(sub).
 			Arg(r.IP).
 			UID(r.IP).

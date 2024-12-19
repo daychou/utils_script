@@ -2,7 +2,6 @@
 package main
 
 import (
-	"fmt"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	ecs20140526 "github.com/alibabacloud-go/ecs-20140526/v3/client"
 	util "github.com/alibabacloud-go/tea-utils/v2/service"
@@ -44,8 +43,6 @@ func getAliyunECS() (instances []*ecs20140526.DescribeInstancesResponseBodyInsta
 
 	//var data = make([]*ecs20140526.DescribeInstancesResponseBodyInstancesInstance, 0)
 	for hasNextpage, marker := true, ""; hasNextpage != false; {
-		fmt.Println("========")
-		fmt.Println(marker)
 		describeInstancesRequest.NextToken = tea.String(marker)
 		runtime := &util.RuntimeOptions{}
 		tryErr := func() (_e error) {
@@ -78,11 +75,7 @@ func getAliyunECS() (instances []*ecs20140526.DescribeInstancesResponseBodyInsta
 			} else {
 				err.Message = tea.String(tryErr.Error())
 			}
-			// 如有需要，请打印 error
-			_, _err = util.AssertAsString(err.Message)
-			if _err != nil {
-				return instances, _err
-			}
+			return instances, err
 		}
 	}
 
